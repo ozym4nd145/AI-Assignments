@@ -5,16 +5,11 @@ class Cube:
     self.size = size
     self.magic_cube = np.zeros((3,3,3))
     self.cube = np.copy(self.magic_cube)
-    self._make_cube(size)
     self.points = []
+    self.rev_map = {}
+    self._make_cube(size)
     self.neg_exception = set()
     self.pos_exception = set()
-
-    for i in range(size):
-      for j in range(size):
-        for k in range(size):
-          self.points.append((i,j,k))
-
     self.populate_exception(size)
 
   def _fill_entry(self,i,j,k,size):
@@ -42,7 +37,11 @@ class Cube:
     for i in range(size):
       for j in range(size):
         for k in range(size):
-          self.magic_cube[i][j][k] = self._fill_entry(i,j,k,size)
+          entry = self._fill_entry(i,j,k,size)
+          point = tuple([i,j,k])
+          self.magic_cube[i][j][k] = entry
+          self.points.append(point)
+          self.rev_map[entry] = point
 
   def _is_collinear(self,p1,p2,p3):
     if(np.allclose(p1,p2) or np.allclose(p1,p3) or np.allclose(p2,p3)): return True
@@ -59,6 +58,7 @@ class Cube:
   def populate_exception(self,size):
     assert (size == 3), "Only works if cube is 3x3x3"
     magic_sum = size*(size**3+1)/2
+    self.magic_sum = magic_sum
     for p1 in self.points:
       for p2 in self.points:
         for p3 in self.points:
@@ -70,3 +70,95 @@ class Cube:
             else:
               if sum != magic_sum:
                 self.pos_exception.add(frozenset([p1,p2,p3]))
+
+class Game:
+  # there are two players:
+  # player 1
+  # player 2
+
+  def __init__(self,size):
+    self.cube = Cube(size)
+    self.size = size
+    self.cur_player = 1
+    self.is_finished = False
+    self.moves = [[],[]]
+    self.total_moves = 0
+    self.winner = None # 0-> Draw , 1-> player 1, 2-> player 2
+    self.points = [0,0]
+
+  # Make a move p (which is a coordinate tuple) and return true if move is valid and game is not finished
+  # else return false
+  def is_valid_move(self,p):
+    return ((not self.is_end()) and self.cube.cube[p] == 0 and not self.is_finished)
+
+  def move(self,p):
+    if self.is_valid_move(p):
+      if self.check_reward_condition(p,self.cur_player):
+        self.points[self.cur_player-1] += 1
+      self.cube.cube[p]=self.cur_player
+      self.moves[self.cur_player-1].append(p)
+      self.cur_player = self.cur_player%2 + 1
+      self.total_moves += 1
+ 
+  def is_end(self):
+    if self.is_finished:
+      return True
+    if self.total_moves >= 20:
+      self.is_finished = True
+      if self.points[0] > self.points[1]:
+        self.winner = 1
+      elif self.points[1] > self.points[0]:
+        self.winner = 2
+      else:
+        self.winner = 0
+      return True
+    return False
+
+  # Checks if the points p1 ,p2 ,p3 make a line that fetches points
+  def _correct_line(self,p1,p2,p3):
+    cube = self.cube
+    if cube._is_collinear(p1,p2,p3):
+      if (cube.magic_cube[p1]+cube.magic_cube[p2]+cube.magic_cube[p3] == cube.magic_sum):
+        if (frozenset([p1,p2,p3]) not in cube.neg_exception):
+          return True
+      elif(frozenset([p1,p2,p3]) in cube.pos_exception):
+        return True
+    return False
+
+  # check if the given move results in a win for player.
+  # return true if it is a winning move
+  def check_reward_condition(self,p,player):
+    if self.is_valid_move(p):
+      prev_moves = self.moves[player-1]
+      for move_1 in prev_moves:
+        for move_2 in prev_moves:
+          if(move_1 != move_2):
+            if self._correct_line(move_1,move_2,p):
+              return True
+    return False
+
+  # return rewarding move for a player p if it exists, else return None
+  def find_rewarding_move(self,player):
+    assert player in [1,2], "Player should be either 1 or 2"
+    prev_moves = self.moves[player-1]
+    for move_1 in prev_moves:
+      for move_2 in prev_moves:
+        if(move_1 != move_2):
+          needed_move = self.cube.magic_sum - (self.cube.magic_cube[move_1] + self.cube.magic_cube[move_2])
+          if(needed_move > 0 and needed_move <= self.size**3):
+            move = self.cube.rev_map[needed_move]
+            if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
+              return move
+    return None
+
+  def __str__(self):
+    return self.cube.cube.__str__()
+
+# game = Game(3)
+# game.move((1,1,1))
+# game.move((0,1,1))
+# game.move((0,0,0))
+# game.find_rewarding_move(2)
+# game.find_rewarding_move(1)
+# game.check_reward_condition((0,1,0),1)
+# game.check_reward_condition((2,2,2),1)
