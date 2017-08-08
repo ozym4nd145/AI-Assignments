@@ -150,15 +150,51 @@ class Game:
             if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
               return move
     return None
+  
+  def any_available_move(self):
+    for p in self.cube.points:
+      if(self.is_valid_move(p)):
+        return p
+    return None
 
   def __str__(self):
     return self.cube.cube.__str__()
 
-# game = Game(3)
-# game.move((1,1,1))
-# game.move((0,1,1))
-# game.move((0,0,0))
-# game.find_rewarding_move(2)
-# game.find_rewarding_move(1)
-# game.check_reward_condition((0,1,0),1)
-# game.check_reward_condition((2,2,2),1)
+game = Game(3)
+
+firstPlayer = int(input("Who Plays First? Computer (1) or Human (2)  "))
+aiPlayer = firstPlayer
+
+while(not game.is_end()):
+  if(game.cur_player == (aiPlayer)):
+    print 'Computer Playing'
+    if(game.is_valid_move((1,1,1))):
+      game.move((1,1,1))
+    else:
+      p = game.find_rewarding_move(game.cur_player)
+      if(p != None):
+        game.move(p)
+      else:
+        p1 = game.find_rewarding_move( (game.cur_player%2 + 1))
+        if(p1 != None):
+          game.move(p1)
+        else:
+          p2 = game.any_available_move()
+          game.move(p2)
+  else:
+    print(game)
+    user_input = raw_input(" Please enter the indices of your move (from 0): ")
+    i, j, k = user_input.split(" ")
+    i = int(i)
+    j = int(j)
+    k = int(k)
+    if(game.is_valid_move((i,j,k))):
+      game.move((i,j,k))
+    else:
+      print "Invalid Move, Please Retry"
+
+print(game)
+if(game.winner == aiPlayer):
+  print 'Computer Wins'
+else:
+  print 'Human Wins'
