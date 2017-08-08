@@ -1,11 +1,14 @@
 import numpy as np
-
+import cProfile
+import time
 class Cube:
   def __init__(self,size):
     self.size = size
     self.magic_cube = np.zeros((3,3,3))
     self.cube = np.copy(self.magic_cube)
     self.points = []
+    self.corner_points =[]
+    self.face_center = []
     self.rev_map = {}
     self._make_cube(size)
     self.neg_exception = set()
@@ -41,19 +44,19 @@ class Cube:
           point = tuple([i,j,k])
           self.magic_cube[i][j][k] = entry
           self.points.append(point)
+          if( (i==0 or i==2) and (j==0 or j==2) and (k==0 or k==2)):
+            self.corner_points.append(point)
+          elif ( (j==1 and k==1) or (i==1 and j==1) or (k==1 and j==1)):
+            self.face_center.append(point)
           self.rev_map[entry] = point
 
   def _is_collinear(self,p1,p2,p3):
-    if(np.allclose(p1,p2) or np.allclose(p1,p3) or np.allclose(p2,p3)): return True
+    
+    if(p1==p2 or p1==p3 or p2==p3): return True
     p1 = np.array(p1)
     p2 = np.array(p2)
     p3 = np.array(p3)
-    v1 = p1-p2
-    v2 = p1-p3
-    v1 = v1/np.linalg.norm(v1)
-    v2 = v2/np.linalg.norm(v2)
-    dot = np.abs(np.dot(v1,v2))
-    return np.isclose(dot,1)
+    return (np.array_equal(2*p1,p2+p3) or np.array_equal(2*p2,(p1+p3)) or np.array_equal(2*p3,(p1+p2)) )
 
   def populate_exception(self,size):
     assert (size == 3), "Only works if cube is 3x3x3"
@@ -62,7 +65,7 @@ class Cube:
     for p1 in self.points:
       for p2 in self.points:
         for p3 in self.points:
-          if (not (np.allclose(p1,p2) or np.allclose(p2,p3) or np.allclose(p3,p1))):
+          if (not (p1==p2 or p2==p3 or p3==p1)):
             sum = self.magic_cube[tuple(p1)] + self.magic_cube[tuple(p2)] + self.magic_cube[tuple(p3)]
             if not self._is_collinear(p1,p2,p3):
               if sum == magic_sum:
@@ -152,6 +155,12 @@ class Game:
     return None
   
   def any_available_move(self):
+    for p in self.cube.corner_points:
+      if(self.is_valid_move(p)):
+        return p
+    for p in self.cube.face_center:
+      if(self.is_valid_move(p)):
+        return p
     for p in self.cube.points:
       if(self.is_valid_move(p)):
         return p
