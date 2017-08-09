@@ -157,7 +157,7 @@ class Game:
   def is_end(self):
     if self.is_finished:
       return True
-    if self.total_moves >= 4:
+    if self.total_moves >= 20:
       self.is_finished = True
       if self.points[0] > self.points[1]:
         self.winner = 1
@@ -237,6 +237,7 @@ game = Game(3)
 
 firstPlayer = int(input("\n\nWho Plays First? Computer (1) or Human (2)  "))
 aiPlayer = firstPlayer
+firstPlayer = aiPlayer%2 + 1
 
 while(not game.is_end()):
   if(game.cur_player == (aiPlayer)):
