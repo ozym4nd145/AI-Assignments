@@ -198,7 +198,7 @@ class Game:
     possible = [np.asarray((p1_+p2_)/2,dtype=np.int32),(2*p1_) - p2_,(2*p2_) - p1_]
     for p in possible:
       if (self.cube._is_collinear(p1,p2,tuple(p)) and np.all(p < 3) and np.all(p>=0)): 
-        return p
+        return tuple(p)
     return None
 
   # return rewarding move for a player p if it exists, else return None
