@@ -275,7 +275,7 @@ while(not game.is_end()):
     else:
       print("Invalid Move, Please Retry")
 game.print_game()
-print("Human - %d\nAI - %d\n" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
+print("Points: \nHuman - %d\nAI - %d\n" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
 if(game.winner == aiPlayer):
   print('Computer Wins')
 elif (game.winner == 0):
