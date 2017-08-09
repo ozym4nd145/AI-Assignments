@@ -54,7 +54,7 @@ class Cube:
 
   def _is_collinear(self,p1,p2,p3):
     
-    if(p1==p2 or p1==p3 or p2==p3): return True
+    if(p1==p2 or p1==p3 or p2==p3): return False
     p1 = np.array(p1)
     p2 = np.array(p2)
     p3 = np.array(p3)
