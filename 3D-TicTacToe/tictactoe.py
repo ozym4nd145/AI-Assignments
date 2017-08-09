@@ -157,7 +157,7 @@ class Game:
   def is_end(self):
     if self.is_finished:
       return True
-    if self.total_moves >= 20:
+    if self.total_moves >= 4:
       self.is_finished = True
       if self.points[0] > self.points[1]:
         self.winner = 1
@@ -270,5 +270,7 @@ while(not game.is_end()):
 print(game)
 if(game.winner == aiPlayer):
   print('Computer Wins')
+elif (game.winner == 0):
+  print('Its a draw')
 else:
   print('Human Wins')
