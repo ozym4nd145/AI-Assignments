@@ -1,6 +1,7 @@
 import numpy as np
 import cProfile
 import time
+#Class that stores the cube and its associated exceptions
 class Cube:
   def __init__(self,size):
     self.size = size
@@ -11,12 +12,13 @@ class Cube:
     self.face_center = []
     self.rev_map = {}
     self._make_cube(size)
-    self.neg_exception = set()
-    self.pos_exception = set()
+    self.neg_exception = set() # Points that are collinear but sum is not 42
+    self.pos_exception = set() # Points that are not collinear but sum is 42
     self.populate_exception(size)
     print("Cube Generated. The 11 Surfaces are: ")
     self.print_11_surfaces(self.size)
 
+  # Function that fills the entries of the magic cube.
   def _fill_entry(self,i,j,k,size):
     i += 1
     j += 1
@@ -38,6 +40,7 @@ class Cube:
     if (size%4 == 2):
       raise Exception('Not yet implement for size of form 4k+2.')
 
+  # Wrapper function that initalizes the cube and fills its elements
   def _make_cube(self,size):
     for i in range(size):
       for j in range(size):
@@ -51,15 +54,14 @@ class Cube:
           elif ( (j==1 and k==1) or (i==1 and j==1) or (k==1 and j==1)):
             self.face_center.append(point)
           self.rev_map[entry] = point
-
+  # Checks if three points p1,p2 and p3 are collinear
   def _is_collinear(self,p1,p2,p3):
-    
     if(p1==p2 or p1==p3 or p2==p3): return False
     p1 = np.array(p1)
     p2 = np.array(p2)
     p3 = np.array(p3)
     return (np.array_equal(2*p1,p2+p3) or np.array_equal(2*p2,(p1+p3)) or np.array_equal(2*p3,(p1+p2)) )
-
+  # Stores the positive and negative exceptions in the sets  
   def populate_exception(self,size):
     assert (size == 3), "Only works if cube is 3x3x3"
     magic_sum = size*(size**3+1)/2
@@ -76,6 +78,12 @@ class Cube:
               if sum != magic_sum:
                 self.pos_exception.add(frozenset([p1,p2,p3]))
 
+  def print_cube_plane(self,index,val):
+    for j in range(3):
+        for k in range(3):
+          print(int(self.cube[val][j][k]),end=' ')
+        print("")
+  
   def print_plane(self,index,val):
     if(index==1):
       for j in range(3):
@@ -118,7 +126,6 @@ class Cube:
       for j in range(3):
         print(int(self.magic_cube[i][j][j]),end=' ')
       print("")
-    
     print ('Diagonal 2 Surface')
     for i in range(3):
       for j in range(3):
@@ -129,7 +136,6 @@ class Game:
   # there are two players:
   # player 1
   # player 2
-
   def __init__(self,size):
     self.cube = Cube(size)
     self.size = size
@@ -139,12 +145,11 @@ class Game:
     self.total_moves = 0
     self.winner = None # 0-> Draw , 1-> player 1, 2-> player 2
     self.points = [0,0]
-
   # Make a move p (which is a coordinate tuple) and return true if move is valid and game is not finished
   # else return false
   def is_valid_move(self,p):
     return ((not self.is_end()) and self.cube.cube[p] == 0 and not self.is_finished)
-
+  # Function that marks a move at the point p on the cube
   def move(self,p):
     if self.is_valid_move(p):
       points_fetched = self.get_reward_points(p,self.cur_player)
@@ -153,7 +158,7 @@ class Game:
       self.moves[self.cur_player-1].append(p)
       self.cur_player = self.cur_player%2 + 1
       self.total_moves += 1
- 
+  # Function that checks whether the end of game is reached i.e. total number of moves is >=20
   def is_end(self):
     if self.is_finished:
       return True
@@ -179,8 +184,7 @@ class Game:
         return True
     return False
 
-  # check if the given move results in a win for player.
-  # return true if it is a winning move
+  # check if the given move, results in a win for player. return true if it is a winning move
   def get_reward_points(self,p,player):
     points = 0
     if self.is_valid_move(p):
@@ -209,16 +213,11 @@ class Game:
     for move_1 in prev_moves:
       for move_2 in prev_moves:
         if(move_1 != move_2):
-          #needed_move = self.cube.magic_sum - (self.cube.magic_cube[move_1] + self.cube.magic_cube[move_2])
-          #if(needed_move > 0 and needed_move <= self.size**3):
-          #  move = self.cube.rev_map[needed_move]
-          #  if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
-          #    return move
           move = self._find_collinear_point(move_1,move_2)
           if(move!=None and self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
             return move
     return None
-  
+  #returns the best available move that has not been played and is valid
   def any_available_move(self):
     for p in self.cube.corner_points:
       if(self.is_valid_move(p)):
@@ -230,6 +229,14 @@ class Game:
       if(self.is_valid_move(p)):
         return p
     return None
+  # function that prints the game board each time
+  def print_game(self):
+    print ('\nTop Surface')
+    self.cube.print_cube_plane(1,0)
+    print ('Middle Surface')
+    self.cube.print_cube_plane(1,1)
+    print ('Bottom Surface')
+    self.cube.print_cube_plane(1,2)
 
   def __str__(self):
     return self.cube.cube.__str__()
@@ -242,7 +249,6 @@ firstPlayer = aiPlayer%2 + 1
 
 while(not game.is_end()):
   if(game.cur_player == (aiPlayer)):
-    print('Computer Playing')
     if(game.is_valid_move((1,1,1))):
       game.move((1,1,1))
     else:
@@ -257,9 +263,9 @@ while(not game.is_end()):
           p2 = game.any_available_move()
           game.move(p2)
   else:
-    print(game)
-    print("Human - %d\nAI - %d\n" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
-    user_input = input(" Please enter the indices of your move (from 0): ")
+    game.print_game()
+    print("\nPoints: \nHuman - %d\nAI - %d" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
+    user_input = input("Please enter the indices of your move (from 0): ")
     i, j, k = user_input.split(" ")
     i = int(i)
     j = int(j)
@@ -268,8 +274,8 @@ while(not game.is_end()):
       game.move((i,j,k))
     else:
       print("Invalid Move, Please Retry")
-
-print(game)
+game.print_game()
+print("Human - %d\nAI - %d\n" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
 if(game.winner == aiPlayer):
   print('Computer Wins')
 elif (game.winner == 0):
