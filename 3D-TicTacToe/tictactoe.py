@@ -14,6 +14,8 @@ class Cube:
     self.neg_exception = set()
     self.pos_exception = set()
     self.populate_exception(size)
+    print("Cube Generated. The 11 Surfaces are: ")
+    self.print_11_surfaces(self.size)
 
   def _fill_entry(self,i,j,k,size):
     i += 1
@@ -74,6 +76,55 @@ class Cube:
               if sum != magic_sum:
                 self.pos_exception.add(frozenset([p1,p2,p3]))
 
+  def print_plane(self,index,val):
+    if(index==1):
+      for j in range(3):
+        for k in range(3):
+          print(int(self.magic_cube[val][j][k]),end=' ')
+        print("")
+    elif(index==2):
+      for i in range(3):
+        for k in range(3):
+          print(int(self.magic_cube[i][val][k]),end=' ')
+        print("")        
+    else:
+      for i in range(3):
+        for j in range(3):
+          print(int(self.magic_cube[i][j][val]),end=' ')
+        print("")        
+     
+  def print_11_surfaces(self,size):
+    assert (size==3), "Only works fif cube is 3x3x3"
+    print ('Top Surface')
+    self.print_plane(1,0)
+    print ('Middle X-Y Surface')
+    self.print_plane(1,1)
+    print ('Bottom Surface')
+    self.print_plane(1,2)
+    print ('Left Surface')
+    self.print_plane(3,0)
+    print ('Middle Y-Z Surface')
+    self.print_plane(3,1)
+    print ('Right Surface')
+    self.print_plane(3,2)
+    print ('Back Surface')
+    self.print_plane(2,0)
+    print ('Middle X-Z Surface')
+    self.print_plane(2,1)
+    print ('Front Surface')
+    self.print_plane(2,2)
+    print ('Diagonal 1 Surface')
+    for i in range(3):
+      for j in range(3):
+        print(int(self.magic_cube[i][j][j]),end=' ')
+      print("")
+    
+    print ('Diagonal 2 Surface')
+    for i in range(3):
+      for j in range(3):
+        print(int(self.magic_cube[i][j][2-j]),end=' ')
+      print("")
+    
 class Game:
   # there are two players:
   # player 1
@@ -163,7 +214,7 @@ class Game:
           #  if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
           #    return move
           move = self._find_collinear_point(move_1,move_2)
-          if(move and self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
+          if(move!=None and self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
             return move
     return None
   
@@ -184,7 +235,7 @@ class Game:
 
 game = Game(3)
 
-firstPlayer = int(input("Who Plays First? Computer (1) or Human (2)  "))
+firstPlayer = int(input("\n\nWho Plays First? Computer (1) or Human (2)  "))
 aiPlayer = firstPlayer
 
 while(not game.is_end()):
