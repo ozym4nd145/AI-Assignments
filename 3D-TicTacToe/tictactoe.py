@@ -147,8 +147,8 @@ class Game:
 
   def move(self,p):
     if self.is_valid_move(p):
-      if self.check_reward_condition(p,self.cur_player):
-        self.points[self.cur_player-1] += 1
+      points_fetched = self.get_reward_points(p,self.cur_player)
+      self.points[self.cur_player-1] += points_fetched
       self.cube.cube[p]=self.cur_player
       self.moves[self.cur_player-1].append(p)
       self.cur_player = self.cur_player%2 + 1
@@ -181,15 +181,16 @@ class Game:
 
   # check if the given move results in a win for player.
   # return true if it is a winning move
-  def check_reward_condition(self,p,player):
+  def get_reward_points(self,p,player):
+    points = 0
     if self.is_valid_move(p):
       prev_moves = self.moves[player-1]
       for move_1 in prev_moves:
         for move_2 in prev_moves:
           if(move_1 != move_2):
             if self._correct_line(move_1,move_2,p):
-              return True
-    return False
+              points += 1
+    return (points/2)
 
   # finds the third point in the cube give two points p1 and p2
   def _find_collinear_point(self,p1,p2):
