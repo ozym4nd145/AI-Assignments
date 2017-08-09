@@ -140,6 +140,16 @@ class Game:
               return True
     return False
 
+  # finds the third point in the cube give two points p1 and p2
+  def _find_collinear_point(self,p1,p2):
+    p1_ = np.array(p1)
+    p2_ = np.array(p2)
+    possible = [np.asarray((p1_+p2_)/2,dtype=np.int32),(2*p1_) - p2_,(2*p2_) - p1_]
+    for p in possible:
+      if (self.cube._is_collinear(p1,p2,tuple(p)) and np.all(p < 3) and np.all(p>=0)): 
+        return p
+    return None
+
   # return rewarding move for a player p if it exists, else return None
   def find_rewarding_move(self,player):
     assert player in [1,2], "Player should be either 1 or 2"
@@ -147,11 +157,14 @@ class Game:
     for move_1 in prev_moves:
       for move_2 in prev_moves:
         if(move_1 != move_2):
-          needed_move = self.cube.magic_sum - (self.cube.magic_cube[move_1] + self.cube.magic_cube[move_2])
-          if(needed_move > 0 and needed_move <= self.size**3):
-            move = self.cube.rev_map[needed_move]
-            if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
-              return move
+          #needed_move = self.cube.magic_sum - (self.cube.magic_cube[move_1] + self.cube.magic_cube[move_2])
+          #if(needed_move > 0 and needed_move <= self.size**3):
+          #  move = self.cube.rev_map[needed_move]
+          #  if(self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
+          #    return move
+          move = self._find_collinear_point(move_1,move_2)
+          if(move and self.cube.cube[move] == 0 and self._correct_line(move_1,move_2,move)):
+            return move
     return None
   
   def any_available_move(self):
@@ -176,7 +189,7 @@ aiPlayer = firstPlayer
 
 while(not game.is_end()):
   if(game.cur_player == (aiPlayer)):
-    print 'Computer Playing'
+    print('Computer Playing')
     if(game.is_valid_move((1,1,1))):
       game.move((1,1,1))
     else:
@@ -192,7 +205,8 @@ while(not game.is_end()):
           game.move(p2)
   else:
     print(game)
-    user_input = raw_input(" Please enter the indices of your move (from 0): ")
+    print("Human - %d\nAI - %d\n" %(game.points[firstPlayer-1],game.points[aiPlayer-1]))
+    user_input = input(" Please enter the indices of your move (from 0): ")
     i, j, k = user_input.split(" ")
     i = int(i)
     j = int(j)
@@ -200,10 +214,10 @@ while(not game.is_end()):
     if(game.is_valid_move((i,j,k))):
       game.move((i,j,k))
     else:
-      print "Invalid Move, Please Retry"
+      print("Invalid Move, Please Retry")
 
 print(game)
 if(game.winner == aiPlayer):
-  print 'Computer Wins'
+  print('Computer Wins')
 else:
-  print 'Human Wins'
+  print('Human Wins')
