@@ -61,10 +61,10 @@ in_post(clr(X),putdown(X)).
 
 
 % Add_precond
-add_precond(Lst,putdown(X),[[holding(X)],[holding(X)]|Lst]).
-add_precond(Lst,pickup(X),[[armemp],[ontable(X)],[clr(X)],[armemp,ontable(X),clr(X)]|Lst]).
-add_precond(Lst,unstack(X,Y),[[armemp],[on(X,Y)],[armemp,on(X,Y)]|Lst]).
-add_precond(Lst,stack(X,Y),[[holding(X)],[clr(Y)],[holding(X),clr(Y)]|Lst]).
+add_precond(Lst,putdown(X),[[holding(X)],[holding(X)],[putdown(X)]|Lst]).
+add_precond(Lst,pickup(X),[[armemp],[ontable(X)],[clr(X)],[armemp,ontable(X),clr(X)],[pickup(X)]|Lst]).
+add_precond(Lst,unstack(X,Y),[[armemp],[on(X,Y)],[armemp,on(X,Y)],[unstack(X,Y)]|Lst]).
+add_precond(Lst,stack(X,Y),[[holding(X)],[clr(Y)],[holding(X),clr(Y)],[stack(X,Y)]|Lst]).
 
 % Add_postcond
 add_postcond(Lst,unstack(X,Y),[clr(Y),holding(X)|Lst]).
@@ -89,16 +89,24 @@ rem_prop(putdown(X),[holding(X)|Other],State):-rem_prop(putdown(X),Other,State).
 
 rem_prop(P,[Q|Other],[Q|State]):-rem_prop(P,Other,State).
 
-solve([],_,_) :- true.
-solve([P|Other],State,RuleList) :- is_sat(P,State),is_rule(P),
-                                   rem_prop(P,State,StateN),add_postcond(P,StateN,StateM),
-                                   solve(Other,StateM,RuleList).
-solve([P|Other],State,RuleList) :- is_sat(P,State),solve(Other,State,RuleList).
-solve([[Prop]|Other],State,[Rule|RuleList]) :- in_post(Prop,Rule),
+process([],_,Z,Z) :- true.
+process([[P]|Other],State,RuleList,Acc) :-     is_rule(P),rem_prop(P,State,StateN),
+                                               add_postcond(StateN,P,StateM),
+                                               process(Other,StateM,RuleList,[P|Acc]).
+
+process([P|Other],State,RuleList,Acc) :-       is_sat(P,State),
+                                               process(Other,State,RuleList,Acc).
+
+process([[Prop]|Other],State,RuleList,Acc) :-  in_post(Prop,Rule),
                                                add_precond(Other,Rule,OtherNew),
-                                               solve(OtherNew,State,RuleList).
-solve([AndProp|Other],State,RuleList) :- append(AndProp,[AndProp|Other],NewL),
-                                          solve(NewL,State,RuleList).
+                                               process(OtherNew,State,RuleList,Acc).
+
+process([AndProp|Other],State,RuleList,Acc) :- append(AndProp,[AndProp|Other],NewL),
+                                               process(NewL,State,RuleList,Acc).
+
+reverse([],Z,Z).
+reverse([H|T],Ans,Acc) :- reverse(T,Ans,[H|Acc]).
+solve(Goal,Start,Answer) :- process(Goal,Start,HL,[]), reverse(HL,Answer,[]).
 
 %% TESTCASES
 %solve([[on("A","B"),on("B","C"),clr("A"),ontable("C"),armemp]],[clr("A"),clr("B"),ontable("A"),ontable("C"),on("B","C")],X)
