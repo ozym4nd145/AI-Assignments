@@ -18,7 +18,7 @@
 % add_postcond \///
 % in_post \///
 % add_precond \///
-% solve \///
+% process \///
 
 %Defining Rules
 is_rule(mvTtbl(_,_)).
@@ -79,17 +79,36 @@ rem_prop(mvFtbl(X,Y),[clr(Y)|Other],State) :- rem_prop(mvFtbl(X,Y),Other,State).
 
 rem_prop(P,[Q|Other],[Q|State]):-rem_prop(P,Other,State).
 
-solve([],_,_) :- true.
-solve([[P]|Other],State,RuleList) :- is_rule(P),rem_prop(P,State,StateN),
-                                   add_postcond(StateN,P,StateM),
-                                   solve(Other,StateM,RuleList).
-solve([P|Other],State,RuleList) :- is_sat(P,State),solve(Other,State,RuleList).
-solve([[Prop]|Other],State,[Rule|RuleList]) :- in_post(Prop,Rule),
+process([],_,Z,Z) :- true.
+process([[P]|Other],State,RuleList,Acc) :-     is_rule(P),rem_prop(P,State,StateN),
+                                               add_postcond(StateN,P,StateM),
+                                               process(Other,StateM,RuleList,[P|Acc]).
+
+process([P|Other],State,RuleList,Acc) :-       is_sat(P,State),
+                                               process(Other,State,RuleList,Acc).
+
+process([[Prop]|Other],State,RuleList,Acc) :-  in_post(Prop,Rule),
                                                add_precond(Other,Rule,OtherNew),
-                                               solve(OtherNew,State,RuleList).
-solve([AndProp|Other],State,RuleList) :- append(AndProp,[AndProp|Other],NewL),
-                                          solve(NewL,State,RuleList).
+                                               process(OtherNew,State,RuleList,Acc).
+
+process([AndProp|Other],State,RuleList,Acc) :- append(AndProp,[AndProp|Other],NewL),
+                                               process(NewL,State,RuleList,Acc).
+
+convert([],[]).
+convert([mvFtbl(X,Y)|HL],[stack(X,Y),pickup(X)|Ans]) :- convert(HL,Ans).
+convert([mvTtbl(X,Y)|HL],[putdown(X),unstack(X,Y)|Ans]) :- convert(HL,Ans).
+convert([mvFT(X,Z,Y)|HL],[stack(X,Y),unstack(X,Z)|Ans]) :- convert(HL,Ans).
+
+reverse([],Z,Z).
+reverse([H|T],Ans,Acc) :- reverse(T,Ans,[H|Acc]).
+
+solve(Goal,Start,Answer) :- process(Goal,Start,HL,[]), convert(HL,AnswerRev), reverse(AnswerRev,Answer,[]).
+
 
 %% TESTCASES
-%solve([[on("A","B"),on("B","C"),clr("A"),ontable("C")]],[clr("A"),clr("B"),ontable("A"),ontable("C"),on("B","C")],X).
-%solve([[on("A","B"),clr("A"),ontable("B"),armemp]],[clr("A"),clr("B"),ontable("A"),ontable("B"),armemp],X).
+%process([[on("A","B"),on("B","C"),clr("A"),ontable("C")]],[clr("A"),clr("B"),ontable("A"),ontable("C"),on("B","C")],X).
+%process([[on("A","B"),clr("A"),ontable("B"),armemp]],[clr("A"),clr("B"),ontable("A"),ontable("B"),armemp],X).
+% solve([[on("Z","X"),on("Y","W"),clr("Y"),clr("Z"),ontable("X"),ontable("W")]],[on("Y","X"),on("W","Z"),clr("Y"),clr("W"),ontable("X"),ontable("Z")],X).
+% solve([[on("X","Z"),on("Y","W"),clr("Y"),clr("X"),ontable("Z"),ontable("W")]],[on("Y","X"),on("Z","W"),clr("Y"),clr("Z"),ontable("X"),ontable("W")],X).
+% solve([[on("X","Z"),on("W","Y"),clr("X"),clr("W"),ontable("Z"),ontable("Y")]],[on("Y","X"),ontable("Z"),ontable("W"),clr("Y"),clr("Z"),clr("W"),ontable("X")],X).
+% solve([[on("A","C"),on("D","B"),ontable("E"),clr("E"),clr("D"),clr("A"),ontable("B"),ontable("C")]],[on("E","C"),on("D","B"),ontable("A"),clr("E"),clr("D"),clr("A"),ontable("B"),ontable("C")],X).
