@@ -106,8 +106,6 @@ solve(Goal,Start,Answer) :- process(Goal,Start,HL,[]), convert(HL,AnswerRev), re
 
 
 %% TESTCASES
-%process([[on("A","B"),on("B","C"),clr("A"),ontable("C")]],[clr("A"),clr("B"),ontable("A"),ontable("C"),on("B","C")],X).
-%process([[on("A","B"),clr("A"),ontable("B"),armemp]],[clr("A"),clr("B"),ontable("A"),ontable("B"),armemp],X).
 % solve([[on("Z","X"),on("Y","W"),clr("Y"),clr("Z"),ontable("X"),ontable("W")]],[on("Y","X"),on("W","Z"),clr("Y"),clr("W"),ontable("X"),ontable("Z")],X).
 % solve([[on("X","Z"),on("Y","W"),clr("Y"),clr("X"),ontable("Z"),ontable("W")]],[on("Y","X"),on("Z","W"),clr("Y"),clr("Z"),ontable("X"),ontable("W")],X).
 % solve([[on("X","Z"),on("W","Y"),clr("X"),clr("W"),ontable("Z"),ontable("Y")]],[on("Y","X"),ontable("Z"),ontable("W"),clr("Y"),clr("Z"),clr("W"),ontable("X")],X).
