@@ -1,0 +1,50 @@
+[System]
+Name='AI_Assignment4'
+Type='mamdani'
+Version=2.0
+NumInputs=3
+NumOutputs=1
+NumRules=6
+AndMethod='min'
+OrMethod='max'
+ImpMethod='min'
+AggMethod='max'
+DefuzzMethod='centroid'
+
+[Input1]
+Name='CGPA'
+Range=[0 10]
+NumMFs=3
+MF1='poor':'zmf',[2 5]
+MF2='excellent':'smf',[8 9.83140655105973]
+MF3='average':'gaussmf',[1.04569678301357 6.5]
+
+[Input2]
+Name='Sports'
+Range=[0 100]
+NumMFs=2
+MF1='good':'smf',[45 80]
+MF2='poor':'zmf',[5 50]
+
+[Input3]
+Name='Co-curricular'
+Range=[0 50]
+NumMFs=2
+MF1='poor':'zmf',[5 20]
+MF2='good':'smf',[30 45]
+
+[Output1]
+Name='Performance'
+Range=[0 10]
+NumMFs=3
+MF1='excellent':'smf',[7.96242774566474 9.59]
+MF2='poor':'zmf',[0 5]
+MF3='average':'gaussmf',[1.68146078958755 5]
+
+[Rules]
+2 0 0, 1 (1) : 2
+3 1 2, 1 (1) : 1
+1 0 0, 2 (1) : 2
+3 2 1, 3 (1) : 1
+3 -1 2, 3 (1) : 1
+3 1 -2, 3 (1) : 1
